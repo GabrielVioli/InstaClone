@@ -4,7 +4,8 @@ namespace Database\Factories;
 
 use App\Models\Comment;
 use Illuminate\Database\Eloquent\Factories\Factory;
-
+use App\Models\User;
+use App\Models\Post;
 /**
  * @extends Factory<Comment>
  */
@@ -18,7 +19,9 @@ class CommentFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'user_id' => User::factory(),
+            'post_id' => Post::factory(),
+            'content' => fake()->sentence(),
         ];
     }
 }
