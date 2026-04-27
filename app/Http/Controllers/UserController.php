@@ -2,55 +2,72 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateUserRequest;
+use App\Http\Requests\UploadAvatarRequest;
+use App\Http\Resources\PostResource;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Services\UserService;
 use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class UserController extends Controller
 {
-    public function index()
-    {
+    use AuthorizesRequests;
 
-    }
-
-    public function store(Request $request)
-    {
-
-    }
-
+    public function __construct(private UserService $userService) {}
 
     public function show($username)
     {
-        $user = User::where('username', $username)
-            ->withCount(['posts', 'followers', 'following'])
-            ->firstOrFail();
+        $user = $this->userService->show($username);
 
         return new UserResource($user);
     }
 
-
-        public function suggestions() {
-            $users = User::where('id', '!=', auth()->id())
-                ->inRandomOrder()
-                ->limit(5)
-                ->get();
-
-            return UserResource::collection($users)->resolve();
-        }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function suggestions(Request $request)
     {
-        //
+        $perPage = $request->input('per_page', 5);
+
+        $suggestions = $this->userService->suggestions(auth()->id(), $perPage);
+
+        return UserResource::collection($suggestions);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function search(Request $request)
     {
-        //
+        $query = $request->input('q');
+
+        $users = $this->userService->search($query);
+
+        return UserResource::collection($users);
+    }
+
+    public function updateMe(UpdateUserRequest $request)
+    {
+        $user = auth()->user();
+
+        $this->authorize('update', $user);
+
+        $updatedUser = $this->userService->updateMe($user, $request->validated());
+
+        return new UserResource($updatedUser);
+    }
+
+    public function uploadAvatar(UploadAvatarRequest $request)
+    {
+        $user = auth()->user();
+
+        $this->authorize('update', $user);
+
+        $updatedUser = $this->userService->uploadAvatar($user, $request->file('avatar'));
+
+        return new UserResource($updatedUser);
+    }
+
+    public function posts(string $id)
+    {
+        $posts = $this->userService->posts($id);
+
+        return PostResource::collection($posts);
     }
 }

@@ -5,61 +5,53 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AuthValidateRequest;
 use App\Http\Requests\LoginValidateRequest;
 use App\Http\Resources\UserResource;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+use App\Services\AuthService;
 use App\Models\User;
+use Illuminate\Http\Request;
+
 class AuthController extends Controller
 {
-    public function Login(LoginValidateRequest $request)
+    public function __construct(private AuthService $auth) {}
+
+    public function login(LoginValidateRequest $request)
     {
-        $credentials = $request->validated();
+        $user = $this->auth->login($request->validated());
 
-        if (!Auth::attempt($credentials)) {
-            return response()->json([
-                'message' => 'Unauthorized'
-            ], 401);
-        }
-
-        $user = Auth::user();
-        $token = $user->createToken('token')->plainTextToken;
-
-        return response()->json([
-            'access_token' => $token,
-            'token_type'   => 'Bearer',
-            'user'         => (new UserResource($user))->resolve()
-        ]);
+        return $this->respondWithToken($user);
     }
 
     public function register(AuthValidateRequest $request)
     {
-        $data = $request->validated();
+        $user = $this->auth->register($request->validated());
 
-        $data['password'] = Hash::make($data['password']);
-
-        $user = User::create($data);
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'access_token' => $token,
-            'token_type'   => 'Bearer',
-            'user'         => (new UserResource($user))->resolve()
-        ]);
+        return $this->respondWithToken($user);
     }
 
-    public function Logout(Request $request)
+    public function logout(Request $request)
     {
-        $request->user()->tokens()->delete();
+        $this->auth->logout($request->user());
+
         return response()->json([
             'message' => 'Logout realizado com sucesso. Token revogado.'
         ], 200);
     }
 
-
-    public function Me(Request $request)
+    public function me(Request $request)
     {
-        return (new UserResource($request->user()));
+        return new UserResource($request->user());
     }
 
+    /**
+     * Método privado para evitar repetição no Login e Register.
+     */
+    private function respondWithToken(User $user)
+    {
+        $token = $this->auth->createToken($user);
+
+        return response()->json([
+            'access_token' => $token,
+            'token_type'   => 'Bearer',
+            'user'         => (new UserResource($user))->resolve()
+        ]);
+    }
 }

@@ -9,9 +9,10 @@ class PostFactory extends Factory
 {
     public function definition(): array
     {
+        $id = fake()->numberBetween(1, 1000);
         return [
             'user_id' => User::factory(),
-            'image_path' => fake()->imageUrl(1080, 1080, 'animals', true),
+            'image_path' => "https://picsum.photos/seed/{$id}/1080/1080",
             'caption' => fake()->paragraph(),
         ];
     }
