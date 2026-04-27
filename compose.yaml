@@ -12,6 +12,14 @@ services:
         volumes:
             - mysql_data:/var/lib/mysql
 
+    mailpit:
+        image: 'axllent/mailpit:latest'
+        ports:
+            - '${FORWARD_MAILPIT_PORT:-1025}:1025'
+            - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
+        networks:
+            - default
+
     app:
         build: .
         image: projeto-final/backend
@@ -26,6 +34,7 @@ services:
             - app_storage:/app/storage
         depends_on:
             - mysql
+            - mailpit
 
 volumes:
     mysql_data: {}

@@ -19,6 +19,9 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/verify/{id}/{hash}', [\App\Http\Controllers\VerifyEmailController::class, 'verify'])
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
 });
 
 // Rotas Protegidas

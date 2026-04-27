@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -12,7 +13,11 @@ class AuthService
     public function register(array $data): User
     {
         $data['password'] = Hash::make($data['password']);
-        return User::create($data);
+        $user = User::create($data);
+
+        event(new Registered($user));
+
+        return $user;
     }
 
     public function login(array $credentials): User
@@ -23,7 +28,15 @@ class AuthService
             ]);
         }
 
-        return Auth::user();
+        $user = Auth::user();
+
+        if (!$user->hasVerifiedEmail()) {
+            throw ValidationException::withMessages([
+                'email' => ['Seu e-mail ainda não foi verificado. Por favor, verifique sua caixa de entrada.'],
+            ]);
+        }
+
+        return $user;
     }
 
     public function createToken(User $user): string
