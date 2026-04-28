@@ -9,9 +9,10 @@ use App\Services\AuthService;
 use App\Models\User;
 use Illuminate\Http\Request;
 
-class AuthController extends Controller
-{
-    public function __construct(private AuthService $auth) {}
+class AuthController extends Controller {
+    public function __construct(private AuthService $auth) {
+
+    }
 
     public function login(LoginValidateRequest $request)
     {

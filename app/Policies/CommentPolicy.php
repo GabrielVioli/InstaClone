@@ -11,10 +11,7 @@ class CommentPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Comment $comment): bool
-    {
-        // O dono do comentário pode deletar
-        // OU o dono do post onde o comentário está pode deletar
+    public function delete(User $user, Comment $comment) {
         return $user->id === $comment->user_id || $user->id === $comment->post->user_id;
     }
 }
